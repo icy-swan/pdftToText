@@ -81,7 +81,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
 
     # 每个分类单独计数
     keywordsgroup_counts = [0] * len(keywordsGroup)
-    keywordsgroup_index = [[]] * len(keywordsGroup)
+    keywordsgroup_index = [[] for i in range(len(keywordsGroup))]
 
     # 统计总字数
     total_words = 0
