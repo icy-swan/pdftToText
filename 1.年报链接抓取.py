@@ -4,7 +4,6 @@
 @Project ：PycharmProjects
 @File    ：巨潮资讯年报2.0.py
 @IDE     ：PyCharm
-@Author  ：lingxiaotian
 @Date    ：2023/5/20 12:38
 '''
 

@@ -2,7 +2,6 @@
 @Project ：PycharmProjects
 @File    ：词频分析.py
 @IDE     ：PyCharm
-@Author  ：lingxiaotian
 @Date    ：2023/5/30 14:34
 '''
 import os
@@ -10,7 +9,7 @@ import re
 import xlwt
 import jieba
 
-work_path="/Users/bl/Downloads/pdf2text/code/reports"
+work_path="/Users/bl/git/pdf2text/reports"
 
 def extract_keywords(filename, keywords):
 
