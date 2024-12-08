@@ -37,17 +37,23 @@ def check_key_in_else_target(idx, step, keywordsgroup_index):
             for x in range(step):
                 next_idx = idx + x + 1
                 # 如果找到，设置为true，不继续循环
-                if target.index(next_idx):
-                    found = True
-                    break
+                try:
+                    if target.index(next_idx):
+                        found = True
+                        break
+                except Exception as e:
+                    found = False
             # 正向没找到，去负向继续找
             if found == False:
                 for x in range(step):
                     next_idx = idx - x - 1
                     # 如果找到，设置为true，不继续循环
-                    if target.index(next_idx):
-                        found = True
-                        break
+                    try:
+                        if target.index(next_idx):
+                            found = True
+                            break
+                    except Exception as e:
+                        found = False
             # 如果一个idx在第一个目标查找词内就没找到，就不用继续遍历了
             if found == False:
                 break
