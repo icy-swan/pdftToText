@@ -26,6 +26,56 @@ steps = [5, 10, 15]
 # 文件存储路径
 work_path="/Users/bl/git/pdftToText/reports"
 
+# 在指定步长里找是否匹配
+def check_key_in_else_target(idx, step, keywordsgroup_index):
+    result = 0
+
+    for i, target in enumerate(keywordsgroup_index):
+        if i != 0:
+            found = False
+            # 在n步之内找正向index
+            for x in range(step):
+                next_idx = idx + x + 1
+                # 如果找到，设置为true，不继续循环
+                if target.index(next_idx):
+                    found = True
+                    break
+            # 正向没找到，去负向继续找
+            if found == False:
+                for x in range(step):
+                    next_idx = idx - x - 1
+                    # 如果找到，设置为true，不继续循环
+                    if target.index(next_idx):
+                        found = True
+                        break
+            # 如果一个idx在第一个目标查找词内就没找到，就不用继续遍历了
+            if found == False:
+                break
+            # 如果找到了就继续找下一个
+            # 如果找到最后一个匹配也是能找到，就设置数
+            if (i == len(keywordsgroup_index) - 1 & found == True):
+                result = 1
+
+    return result
+
+# 计算匹配值
+def count_relative(keywordsgroup_index, steps):
+    # 统计总相关字出现字数
+    related_words_counts = [0] * len(steps)
+    # 目标遍历数组，其余数组对其进行比较
+    target = keywordsgroup_index[0]
+    # cur_i = 1
+    # length = len(keywordsgroup_index)
+    # 遍历
+    for idx in target:
+        # 根据不同step进行查找
+        for i, step in enumerate(steps):
+            check_step_count = check_key_in_else_target(idx, step, keywordsgroup_index)
+            related_words_counts[i] = related_words_counts[i] + check_step_count
+
+    return  related_words_counts
+
+# 抽取关键字
 def extract_keywords(keywordsGroup, root, file_origin_name):
     filename = os.path.join(root, file_origin_name)
 
@@ -35,8 +85,6 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
 
     # 统计总字数
     total_words = 0
-    # 统计总相关字出现字数
-    related_words_counts = [0] * len(steps)
 
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -68,16 +116,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
             workbook.save(temp_file_path)
         except Exception as e:
             print(f"创建文件路径错误: {temp_file_path}")
-        
 
-        # # 计算每个关键词组内的所有关键词的计数
-        # for i, keywords in enumerate(keywordsGroup):
-        #     keywords_counts = 0
-        #     for keyword in keywords:
-        #         # 组内的每个关键词，统计数量并相加
-        #         keywords_counts += words.count(keyword)
-        #     # 记录到组的计数内
-        #     keywordsgroup_counts[i] = keywords_counts
 
         # 遍历分词后的words，获取所有分类匹配的word的index
         for i, word in enumerate(words):
@@ -95,8 +134,8 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
                         # 记录该分类的index
                         keywordsgroup_index[j].append(i)
         # 进行关联计算
-        # todo
-
+        # 将第一个关键词组依次找出顺序，并于剩余关键词组内找寻相关顺序step步长内是否都有关联
+        related_words_counts = count_relative(keywordsgroup_index, steps)
 
     except FileNotFoundError:
         print(f"文件不存在: {filename}")
@@ -241,8 +280,8 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
 if __name__ == '__main__':
     # 设置要提取的关键词列表
     keywordsGroup = [
-        ['负债率'],
-        ['效率']    
+        ['上海'],
+        ['北京']    
     ]
     
     root_folder = f"{work_path}"
