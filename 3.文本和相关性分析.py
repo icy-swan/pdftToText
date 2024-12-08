@@ -28,7 +28,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
 
     # 每个分类单独计数
     keywordsgroup_counts = [0] * len(keywordsGroup)
-    keywordsgroup_index = [0] * len(keywordsGroup)
+    keywordsgroup_index = [[]] * len(keywordsGroup)
 
     # 统计总字数
     total_words = 0
@@ -67,21 +67,34 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
             print(f"创建文件路径错误: {temp_file_path}")
         
 
-        # 计算每个关键词组内的所有关键词的计数
-        for i, keywords in enumerate(keywordsGroup):
-            keywords_counts = 0
-            for keyword in keywords:
-                # 组内的每个关键词，统计数量并相加
-                keywords_counts += words.count(keyword)
-            # 记录到组的计数内
-            keywordsgroup_counts[i] = keywords_counts
+        # # 计算每个关键词组内的所有关键词的计数
+        # for i, keywords in enumerate(keywordsGroup):
+        #     keywords_counts = 0
+        #     for keyword in keywords:
+        #         # 组内的每个关键词，统计数量并相加
+        #         keywords_counts += words.count(keyword)
+        #     # 记录到组的计数内
+        #     keywordsgroup_counts[i] = keywords_counts
 
-        # 统计关键词出现次数
-        # for i, keyword in enumerate(keywords):
-        #     keyword_counts[i] = words.count(keyword)
+        # 遍历分词后的words，获取所有分类匹配的word的index
+        for i, word in enumerate(words):
+            #  遍历关键词
+            for j, keywords in enumerate(keywordsGroup):
+                for keyword in keywords:
+                    # 关键词创建正则表达式，与分词的每个词进行匹配
+                    # 拥有解决“负债率”和“企业负债率”不一致的问题
+                    # 如果不考虑多词组的关联计算，其实可以在分词时使用search分词，可以直接拆细词
+                    # 但是考虑关联，需要计算词的距离，所以无法search分词
+                    patten = rf"{keyword}"
+                    if(re.search(patten, word)):
+                        # 找到，该分类的统计数据+1
+                        keywordsgroup_counts[j] = keywordsgroup_counts[j] + 1
+                        # 记录该分类的index
+                        keywordsgroup_index[j].append(i)
+        # 进行关联计算
+        # todo
 
-        # total_words = len(words)  # 统计总字数
-        
+
     except FileNotFoundError:
         print(f"文件不存在: {filename}")
     except PermissionError:
