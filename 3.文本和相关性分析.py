@@ -21,6 +21,9 @@ import openpyxl
 # 输入年份区间
 start_year = "2013"
 end_year = "2023"
+# 相关性计算，多少个词内
+steps = [5, 10, 15]
+# 文件存储路径
 work_path="/Users/bl/git/pdftToText/reports"
 
 def extract_keywords(keywordsGroup, root, file_origin_name):
@@ -33,7 +36,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
     # 统计总字数
     total_words = 0
     # 统计总相关字出现字数
-    related_words_counts = 0
+    related_words_counts = [0] * len(steps)
 
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -154,11 +157,10 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
         worksheet.write(row, 2, '年份')
         worksheet.write(row, 3, '总字数')  # 添加总字数列
 
-        j = 0
         for i, keyword in enumerate(keywordsGroup):
-            worksheet.write(row, i + 4, f'type{i}')  # 按类型进行计数统计
-            j = i+5
-        worksheet.write(row, j, '关联词计数')
+            worksheet.write(row, i + 4, f'关键词类别-{i}的次数')  # 按类型进行计数统计
+        for i, step in enumerate(steps):
+            worksheet.write(row, i + 4 + len(keywordsGroup), f'关联词step为{step}的次数') #写入关联词计数
         row += 1
 
         total_files = count_txt_files(folder_path, start_year, end_year)
@@ -195,7 +197,9 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             worksheet.write(row, 3, total_words)  # 写入总字数
                             for i, count in enumerate(keywordsgroup_counts):
                                 worksheet.write(row, i + 4, count)  # 调整关键词列的索引
-                            worksheet.write(row, j, related_words_counts) #写入关联词计数
+                            for i, count in enumerate(related_words_counts):
+                                worksheet.write(row, i + 4 + len(keywordsgroup_counts), count) #写入关联词计数
+
                             row += 1
 
                             # 更新进度
