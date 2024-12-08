@@ -21,29 +21,44 @@ start_year = "2013"
 end_year = "2023"
 work_path="/Users/bl/git/pdftToText/reports"
 
-def extract_keywords(filename, keywords):
+def extract_keywords(filename, keywordsGroup):
 
-    keyword_counts = [0] * len(keywords)
+    # 每个分类单独计数
+    keywordsgroup_counts = [0] * len(keywordsGroup)
+    keywordsgroup_index = [0] * len(keywordsGroup)
+
     total_words = 0  # 统计总字数
 
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # 将关键词添加到自定义词典
-        for word in keywords:
-            jieba.add_word(word)
+        # 将多个分组的关键词，全部添加到自定义词典
+        for keywords in keywordsGroup:
+            for keyword in keywords:
+                jieba.add_word(keyword)
 
         # 使用jieba库进行分词
         words = jieba.cut(content)
         words = [word for word in words if word.strip()]
+        # 统计总字数
+        total_words = len(words)
+
+        # 计算每个关键词组内的所有关键词的计数
+        for i, keywords in enumerate(keywordsGroup):
+            keywords_counts = 0
+            for keyword in keywords:
+                # 组内的每个关键词，统计数量并相加
+                keywords_counts += words.count(keyword)
+            # 记录到组的计数内
+            keywordsgroup_counts[i] = keywords_counts
 
         # 统计关键词出现次数
-        for i, keyword in enumerate(keywords):
-            keyword_counts[i] = words.count(keyword)
+        # for i, keyword in enumerate(keywords):
+        #     keyword_counts[i] = words.count(keyword)
 
-        total_words = len(words)  # 统计总字数
-
+        # total_words = len(words)  # 统计总字数
+        related_words_counts = 0
     except FileNotFoundError:
         print(f"文件不存在: {filename}")
     except PermissionError:
@@ -52,7 +67,7 @@ def extract_keywords(filename, keywords):
         print(f"从文件中获取关键词失败: {filename}")
         print(str(e))
 
-    return keyword_counts, total_words
+    return related_words_counts, keywordsgroup_counts, total_words
 
 
 def count_txt_files(folder_path, start_year=None, end_year=None):
@@ -135,14 +150,14 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             company_name = match.group(2)
 
                             # 提取关键词并统计词频和总字数
-                            related_words_counts, keyword_counts, total_words = extract_keywords(os.path.join(root, filename), keywordsGroup)
+                            related_words_counts, keywordsgroup_counts, total_words = extract_keywords(os.path.join(root, filename), keywordsGroup)
 
                             # 将结果写入Excel表格
                             worksheet.write(row, 0, stock_code)
                             worksheet.write(row, 1, company_name)
                             worksheet.write(row, 2, year)
                             worksheet.write(row, 3, total_words)  # 写入总字数
-                            for i, count in enumerate(keyword_counts):
+                            for i, count in enumerate(keywordsgroup_counts):
                                 worksheet.write(row, i + 4, count)  # 调整关键词列的索引
                             worksheet.write(row, j, related_words_counts) #写入关联词计数
                             row += 1
