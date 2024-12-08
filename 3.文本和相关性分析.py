@@ -15,19 +15,25 @@ import os
 import re
 import xlwt
 import jieba
+# import difflib
+import openpyxl
 
 # 输入年份区间
 start_year = "2013"
 end_year = "2023"
 work_path="/Users/bl/git/pdftToText/reports"
 
-def extract_keywords(filename, keywordsGroup):
+def extract_keywords(keywordsGroup, root, file_origin_name):
+    filename = os.path.join(root, file_origin_name)
 
     # 每个分类单独计数
     keywordsgroup_counts = [0] * len(keywordsGroup)
     keywordsgroup_index = [0] * len(keywordsGroup)
 
-    total_words = 0  # 统计总字数
+    # 统计总字数
+    total_words = 0
+    # 统计总相关字出现字数
+    related_words_counts = 0
 
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -44,6 +50,23 @@ def extract_keywords(filename, keywordsGroup):
         # 统计总字数
         total_words = len(words)
 
+
+        #保存下分词后的数据，主要用于过程检测
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Alice"
+        worksheet.append(["分词结果"])
+        for w in words:
+            worksheet.append([w])
+        tempPath= os.path.join(root, f"temp")
+        try:
+            os.makedirs(tempPath, exist_ok=True)
+            temp_file_path = f"{tempPath}/{file_origin_name}分词结果.xlsx"
+            workbook.save(temp_file_path)
+        except Exception as e:
+            print(f"创建文件路径错误: {temp_file_path}")
+        
+
         # 计算每个关键词组内的所有关键词的计数
         for i, keywords in enumerate(keywordsGroup):
             keywords_counts = 0
@@ -58,7 +81,7 @@ def extract_keywords(filename, keywordsGroup):
         #     keyword_counts[i] = words.count(keyword)
 
         # total_words = len(words)  # 统计总字数
-        related_words_counts = 0
+        
     except FileNotFoundError:
         print(f"文件不存在: {filename}")
     except PermissionError:
@@ -150,7 +173,7 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             company_name = match.group(2)
 
                             # 提取关键词并统计词频和总字数
-                            related_words_counts, keywordsgroup_counts, total_words = extract_keywords(os.path.join(root, filename), keywordsGroup)
+                            related_words_counts, keywordsgroup_counts, total_words = extract_keywords(keywordsGroup, root, filename)
 
                             # 将结果写入Excel表格
                             worksheet.write(row, 0, stock_code)
