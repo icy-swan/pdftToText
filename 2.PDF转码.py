@@ -16,7 +16,7 @@ import re
 #日志配置文件
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-work_path = "/Users/bl/git/pdf2text/"
+work_path = "/Users/bl/git/pdftToText/"
 
 #下载模块
 def download_pdf(pdf_url, pdf_file_path):
