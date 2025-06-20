@@ -34,8 +34,8 @@ def download_pdf(pdf_url, pdf_file_path):
 
 #文件转换
 def convert(code, name, year, pdf_url, pdf_dir, txt_dir, flag_pdf):
-    pdf_file_path = os.path.join(pdf_dir, re.sub(r'[\\/:*?"<>|]', '',f"{code:06}_{name}_{year}.pdf"))
-    txt_file_path = os.path.join(txt_dir, re.sub(r'[\\/:*?"<>|]', '', f"{code:06}_{name}_{year}.txt"))
+    pdf_file_path = os.path.join(pdf_dir, f"{code:06}_{name}_{year}.pdf")
+    txt_file_path = os.path.join(txt_dir, f"{code:06}_{name}_{year}.txt")
 
     try:
         # 下载PDF文件
@@ -89,7 +89,7 @@ def main(file_name,pdf_dir,txt_dir,flag_pdf):
 
     # 多进程下载PDF并转为TXT文件
     with multiprocessing.Pool() as pool:
-        for code, name, year, pdf_url in content_dict:
+        for code, name, year, pdf_url in content_dict:    
             txt_file_name = f"{code:06}_{name}_{year}.txt"
             txt_file_path = os.path.join(txt_dir, txt_file_name)
             if os.path.exists(txt_file_path):
@@ -105,10 +105,10 @@ if __name__ == '__main__':
     # 是否删除pdf文件，True为是，False为否
     flag_pdf = False
     # 是否批量处理多个年份，True为是，False为否
-    Flag = False
+    Flag = True
     if Flag:
         #批量下载并转换年份区间
-        for year in range(2004,2022):
+        for year in range(2009,2013):
             file_name = f"{work_path}年报链接_{year}Alice.xlsx"
             # 创建存储文件的文件夹路径，如有需要请修改
             pdf_dir = f'reports/{year}/pdf'
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     else:
         #处理单独年份：
         #特定年份的excel表格，请务必修改。
-        year = 2013
+        year = 2012
         file_name = f"{work_path}年报链接_{year}Alice.xlsx"
         pdf_dir = f'reports/{year}/pdf'
         txt_dir = f'reports/{year}/txt'
