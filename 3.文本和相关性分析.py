@@ -20,7 +20,7 @@ import openpyxl
 
 # 输入年份区间
 start_year = "2013"
-end_year = "2023"
+end_year = "2013"
 # 相关性计算，多少个词内
 steps = [5, 10, 15]
 # 文件存储路径
@@ -91,7 +91,8 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
 
     # 统计总字数
     total_words = 0
-
+    # 抽取后的文件的存放路径
+    tempPath= os.path.join(root, f"temp")
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -115,7 +116,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         worksheet.append(["分词结果"])
         for w in words:
             worksheet.append([w])
-        tempPath= os.path.join(root, f"temp")
+
         try:
             os.makedirs(tempPath, exist_ok=True)
             temp_file_path = f"{tempPath}/{file_origin_name}分词结果.xlsx"
@@ -123,22 +124,45 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         except Exception as e:
             print(f"创建文件路径错误: {temp_file_path}")
 
+        if(file_origin_name == "2000795_太原刚玉.txt"):
+            print("")       
 
-        # 遍历分词后的words，获取所有分类匹配的word的index
-        for i, word in enumerate(words):
-            #  遍历关键词
-            for j, keywords in enumerate(keywordsGroup):
-                for keyword in keywords:
-                    # 关键词创建正则表达式，与分词的每个词进行匹配
-                    # 拥有解决“负债率”和“企业负债率”不一致的问题
-                    # 如果不考虑多词组的关联计算，其实可以在分词时使用search分词，可以直接拆细词
-                    # 但是考虑关联，需要计算词的距离，所以无法search分词
-                    patten = rf"{keyword}"
+        # # 遍历分词后的words，获取所有分类匹配的word的index
+        # for i, word in enumerate(words):
+        #     #  遍历关键词
+        #     for j, keywords in enumerate(keywordsGroup):
+        #         for keyword in keywords:
+        #             # 关键词创建正则表达式，与分词的每个词进行匹配
+        #             # 拥有解决“负债率”和“企业负债率”不一致的问题
+        #             # 如果不考虑多词组的关联计算，其实可以在分词时使用search分词，可以直接拆细词
+        #             # 但是考虑关联，需要计算词的距离，所以无法search分词
+        #             patten = rf"{keyword}"
+        #             if(re.search(patten, word)):
+        #                 # 找到，该分类的统计数据+1
+        #                 keywordsgroup_counts[j] = keywordsgroup_counts[j] + 1
+        #                 # 记录该分类的index
+        #                 keywordsgroup_index[j].append(i)
+
+        # 1. 生产一个key与index的字典
+        words_dict = {}
+        for idx, item in enumerate(words):
+            if item not in words_dict:
+                words_dict[item]=[]
+            words_dict[item].append(idx)
+        # 2. 进行遍历匹配
+        for j, keywords in enumerate(keywordsGroup):
+            for keyword in keywords:
+                # 关键词创建正则表达式，与分词的每个词进行匹配
+                # 拥有解决“负债率”和“企业负债率”不一致的问题
+                # 如果不考虑多词组的关联计算，其实可以在分词时使用search分词，可以直接拆细词
+                # 但是考虑关联，需要计算词的距离，所以无法search分词
+                patten = rf"{keyword}"
+                for word in words_dict:
                     if(re.search(patten, word)):
                         # 找到，该分类的统计数据+1
                         keywordsgroup_counts[j] = keywordsgroup_counts[j] + 1
                         # 记录该分类的index
-                        keywordsgroup_index[j].append(i)
+                        keywordsgroup_index[j].extend(words_dict[word])
         # 进行关联计算
         # 将第一个关键词组依次找出顺序，并于剩余关键词组内找寻相关顺序step步长内是否都有关联
         related_words_counts = count_relative(keywordsgroup_index, steps)
@@ -233,6 +257,7 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             company_name = match.group(2)
 
                             # 提取关键词并统计词频和总字数
+                            print(f"\r开始处理: ", filename, end='')
                             related_words_counts, keywordsgroup_counts, total_words = extract_keywords(keywordsGroup, root, filename)
 
                             # 将结果写入Excel表格
@@ -286,8 +311,36 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
 if __name__ == '__main__':
     # 设置要提取的关键词列表
     keywordsGroup = [
-        ['上海'],
-        ['北京']    
+        [
+            "1973年石油危机", "海上钻井", "西德克萨斯中质原油", "濒危物种", "天然气价格",
+            "能源", "气候变化", "石油平台", "海上钻进平台", "西德克萨斯中质原油",
+            "WTI", "能源安全", "石油出口", "石油", "油", "原油", "石油输出国组织",
+            "OPEC", "美国石油协会", "API", "水力压裂", "石油供应", "能源效率",
+            "污染", "碳税", "绿色能源", "太阳能", "光伏发电", "光伏技术", "环境",
+            "太阳能", "乙醇燃料混合物", "内燃机", "页岩油", "汽油价格", "测井",
+            "电动汽车", "天然气", "可持续能源", "温室气体", "替代能源", "能源行业",
+            "风力", "能源冲击", "自然资源", "碳排放", "化石燃料", "油页岩", "能源危机",
+            "石油出口禁令", "COGIS", "走向绿色", "环保化", "绿色发展", "石油储集层",
+            "能源价格冲击", "油井", "钻井泥浆", "碳氢化合物", "烃", "残油", "渣油",
+            "能源价格冲击", "管道", "管线", "能源市场", "液化石油气", "可持续性",
+            "能源不安全", "太阳能电池", "乙醇价格", "石油和天然气", "风能", "碳足迹",
+            "全球变暖", "石油储量", "COGCC", "混合动力汽车", "石油工业", "石油行业",
+            "清洁能源法案", "能源价格波动", "定向钻井", "液化天然气", "可再生能源",
+            "玉米乙醇", "石油危机", "能源独立", "压裂开采", "节能", "乙醇燃料",
+            "石油价格", "油价", "勘探井", "能源税", "地热能", "石油", "布伦特原油",
+            "汽油", "水平钻井", "探明储量", "清洁能源", "温室效应", "京都议定书",
+            "太阳能发电", "太阳能", "堆肥", "煤油"
+        ],
+        [
+            "风险", "经营风险", "市场风险", "信用风险", "不确定性", "不确定",
+            "波动", "变化", "改变", "徘徊", "不稳", "不稳定性", "不稳定",
+            "不寻常", "错综复杂", "非常复杂", "纷繁复杂", "纷纭复杂", "十分复杂",
+            "结构复杂", "变得复杂", "风云变幻", "风云突变", "矛盾突出", "突变",
+            "复杂", "复杂多变", "诡谲多变", "阵痛", "过渡", "问责", "整顿",
+            "危险", "动荡", "动荡不安", "动荡不定", "多变性", "振荡下行", "震荡",
+            "震荡不安", "政治波动", "难以确定", "难以预测", "难以预料", "难以捉摸",
+            "接受考验", "混乱", "混乱状态", "有时", "时而", "随机", "冲击", "危机"
+        ]  
     ]
     
     root_folder = f"{work_path}"
@@ -308,3 +361,4 @@ if __name__ == '__main__':
 
     #！！！注意：如果程序运行无反应，多半是路径和txt文件命名问题！
     # 推荐文件名命名格式：“600519_贵州茅台_2019.txt”
+

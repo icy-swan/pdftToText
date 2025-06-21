@@ -177,7 +177,7 @@ if __name__ == '__main__':
     root_folder = f"{work_path}"
     # 输入年份区间
     start_year = "2013"
-    end_year = "2023"
+    end_year = "2024"
 
     # 输入处理结果的文件名
     name = "词频分析结果.xlsx"
