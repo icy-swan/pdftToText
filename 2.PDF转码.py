@@ -93,7 +93,8 @@ def main(file_name,pdf_dir,txt_dir,flag_pdf):
             txt_file_name = f"{code:06}_{name}_{year}.txt"
             txt_file_path = os.path.join(txt_dir, txt_file_name)
             if os.path.exists(txt_file_path):
-                logging.info(f"{txt_file_name} 已存在，跳过.")
+                # logging.info(f"{txt_file_name} 已存在，跳过.")
+                continue
             else:
                 pool.apply_async(convert, args=(code, name, year, pdf_url, pdf_dir, txt_dir, flag_pdf))
 
@@ -105,7 +106,7 @@ if __name__ == '__main__':
     # 是否删除pdf文件，True为是，False为否
     flag_pdf = False
     # 是否批量处理多个年份，True为是，False为否
-    Flag = True
+    Flag = False
     if Flag:
         #批量下载并转换年份区间
         for year in range(2009,2013):
@@ -118,7 +119,7 @@ if __name__ == '__main__':
     else:
         #处理单独年份：
         #特定年份的excel表格，请务必修改。
-        year = 2012
+        year = 2024
         file_name = f"{work_path}年报链接_{year}Alice.xlsx"
         pdf_dir = f'reports/{year}/pdf'
         txt_dir = f'reports/{year}/txt'
