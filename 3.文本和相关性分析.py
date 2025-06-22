@@ -132,6 +132,8 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         try:
             for idx, item in enumerate(words):
                 clean_item = clean_excel_text(item)
+                if clean_item == "":
+                    continue
                 # 写入excel
                 worksheet.append([clean_item])
                 if clean_item not in words_dict:
