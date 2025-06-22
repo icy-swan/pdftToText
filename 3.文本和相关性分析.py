@@ -127,11 +127,18 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         worksheet = workbook.active
         worksheet.title = "Alice"
         worksheet.append(["分词结果"])
+        # 1. 生产一个key与index的字典
+        words_dict = {}
         try:
-            for w in words:
-                worksheet.append([clean_excel_text(w)])
+            for idx, item in enumerate(words):
+                clean_item = clean_excel_text(item)
+                # 写入excel
+                worksheet.append([clean_item])
+                if clean_item not in words_dict:
+                    words_dict[clean_item]=[]
+                words_dict[clean_item].append(idx)
         except Exception as e:
-            print(str(e))
+            print("生产字典错误", str(e))
 
         try:
             os.makedirs(tempPath, exist_ok=True)
@@ -140,12 +147,6 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         except Exception as e:
             print(f"创建文件路径错误: {temp_file_path}")
 
-        # 1. 生产一个key与index的字典
-        words_dict = {}
-        for idx, item in enumerate(words):
-            if item not in words_dict:
-                words_dict[item]=[]
-            words_dict[item].append(idx)
         # 2. 进行遍历匹配
         for j, keywords in enumerate(keywordsGroup):
             for keyword in keywords:
