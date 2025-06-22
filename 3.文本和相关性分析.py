@@ -17,6 +17,19 @@ import xlwt
 import jieba
 # import difflib
 import openpyxl
+import re
+
+def clean_excel_text(text):
+    """
+    移除Excel不允许的控制字符（ASCII 0-31中除\t\n\r外的所有字符）
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # 正则表达式：匹配所有非法控制字符
+    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', text)
+    return cleaned
+
 
 # 输入年份区间
 start_year = "2013"
@@ -114,8 +127,11 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         worksheet = workbook.active
         worksheet.title = "Alice"
         worksheet.append(["分词结果"])
-        for w in words:
-            worksheet.append([w])
+        try:
+            for w in words:
+                worksheet.append([clean_excel_text(w)])
+        except Exception as e:
+            print(str(e))
 
         try:
             os.makedirs(tempPath, exist_ok=True)
@@ -123,25 +139,6 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
             workbook.save(temp_file_path)
         except Exception as e:
             print(f"创建文件路径错误: {temp_file_path}")
-
-        if(file_origin_name == "2000795_太原刚玉.txt"):
-            print("")       
-
-        # # 遍历分词后的words，获取所有分类匹配的word的index
-        # for i, word in enumerate(words):
-        #     #  遍历关键词
-        #     for j, keywords in enumerate(keywordsGroup):
-        #         for keyword in keywords:
-        #             # 关键词创建正则表达式，与分词的每个词进行匹配
-        #             # 拥有解决“负债率”和“企业负债率”不一致的问题
-        #             # 如果不考虑多词组的关联计算，其实可以在分词时使用search分词，可以直接拆细词
-        #             # 但是考虑关联，需要计算词的距离，所以无法search分词
-        #             patten = rf"{keyword}"
-        #             if(re.search(patten, word)):
-        #                 # 找到，该分类的统计数据+1
-        #                 keywordsgroup_counts[j] = keywordsgroup_counts[j] + 1
-        #                 # 记录该分类的index
-        #                 keywordsgroup_index[j].append(i)
 
         # 1. 生产一个key与index的字典
         words_dict = {}
@@ -159,10 +156,11 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
                 patten = rf"{keyword}"
                 for word in words_dict:
                     if(re.search(patten, word)):
+                        match_item = words_dict[word]
                         # 找到，该分类的统计数据+1
-                        keywordsgroup_counts[j] = keywordsgroup_counts[j] + 1
+                        keywordsgroup_counts[j] = keywordsgroup_counts[j] + len(match_item)
                         # 记录该分类的index
-                        keywordsgroup_index[j].extend(words_dict[word])
+                        keywordsgroup_index[j].extend(match_item)
         # 进行关联计算
         # 将第一个关键词组依次找出顺序，并于剩余关键词组内找寻相关顺序step步长内是否都有关联
         related_words_counts = count_relative(keywordsgroup_index, steps)
@@ -172,7 +170,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
     except PermissionError:
         print(f"没有访问权限: {filename}")
     except Exception as e:
-        print(f"从文件中获取关键词失败: {filename}")
+        print(f"从文件中获取关键词失败: {filename}", e)
         print(str(e))
 
     return related_words_counts, keywordsgroup_counts, total_words
@@ -257,7 +255,6 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             company_name = match.group(2)
 
                             # 提取关键词并统计词频和总字数
-                            print(f"\r开始处理: ", filename, end='')
                             related_words_counts, keywordsgroup_counts, total_words = extract_keywords(keywordsGroup, root, filename)
 
                             # 将结果写入Excel表格
