@@ -19,6 +19,17 @@ import jieba
 import openpyxl
 import re
 
+
+
+# 输入年份区间
+start_year = "2013"
+end_year = "2013"
+# 相关性计算，多少个词内
+steps = [5, 10, 15]
+# 文件存储路径
+work_path="/Users/bl/git/pdftToText/reports"
+
+
 def clean_excel_text(text):
     """
     移除Excel不允许的控制字符（ASCII 0-31中除\t\n\r外的所有字符）
@@ -29,15 +40,6 @@ def clean_excel_text(text):
     # 正则表达式：匹配所有非法控制字符
     cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', text)
     return cleaned
-
-
-# 输入年份区间
-start_year = "2013"
-end_year = "2013"
-# 相关性计算，多少个词内
-steps = [5, 10, 15]
-# 文件存储路径
-work_path="/Users/bl/git/pdftToText/reports"
 
 # 在指定步长里找是否匹配
 def check_key_in_else_target(idx, step, keywordsgroup_index):
@@ -83,8 +85,6 @@ def count_relative(keywordsgroup_index, steps):
     related_words_counts = [0] * len(steps)
     # 目标遍历数组，其余数组对其进行比较
     target = keywordsgroup_index[0]
-    # cur_i = 1
-    # length = len(keywordsgroup_index)
     # 遍历
     for idx in target:
         # 根据不同step进行查找
@@ -100,7 +100,10 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
 
     # 每个分类单独计数
     keywordsgroup_counts = [0] * len(keywordsGroup)
+    # 记录查找到的keywords的index
     keywordsgroup_index = [[] for i in range(len(keywordsGroup))]
+    # 记录查找到的keywords的key
+    keywordsgroup_item = [set() for i in range(len(keywordsGroup))]
 
     # 统计总字数
     total_words = 0
@@ -164,6 +167,8 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
                         keywordsgroup_counts[j] = keywordsgroup_counts[j] + len(match_item)
                         # 记录该分类的index
                         keywordsgroup_index[j].extend(match_item)
+                        # 记录匹配的keyword
+                        keywordsgroup_item[j].add(keyword)
         # 进行关联计算
         # 将第一个关键词组依次找出顺序，并于剩余关键词组内找寻相关顺序step步长内是否都有关联
         related_words_counts = count_relative(keywordsgroup_index, steps)
@@ -176,7 +181,7 @@ def extract_keywords(keywordsGroup, root, file_origin_name):
         print(f"从文件中获取关键词失败: {filename}", e)
         print(str(e))
 
-    return related_words_counts, keywordsgroup_counts, total_words
+    return related_words_counts, keywordsgroup_counts, total_words, keywordsgroup_item
 
 
 def count_txt_files(folder_path, start_year=None, end_year=None):
@@ -231,6 +236,8 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
             worksheet.write(row, i + 4, f'关键词类别-{i}的次数')  # 按类型进行计数统计
         for i, step in enumerate(steps):
             worksheet.write(row, i + 4 + len(keywordsGroup), f'关联词step为{step}的次数') #写入关联词计数
+        for i, keywords in enumerate(keywordsGroup):
+            worksheet.write(row, i + 4 + len(keywordsGroup) + len(steps), f'匹配的管理词-{i}')
         row += 1
 
         total_files = count_txt_files(folder_path, start_year, end_year)
@@ -258,7 +265,7 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             company_name = match.group(2)
 
                             # 提取关键词并统计词频和总字数
-                            related_words_counts, keywordsgroup_counts, total_words = extract_keywords(keywordsGroup, root, filename)
+                            related_words_counts, keywordsgroup_counts, total_words, keywordsgroup_item = extract_keywords(keywordsGroup, root, filename)
 
                             # 将结果写入Excel表格
                             worksheet.write(row, 0, stock_code)
@@ -269,7 +276,8 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                                 worksheet.write(row, i + 4, count)  # 调整关键词列的索引
                             for i, count in enumerate(related_words_counts):
                                 worksheet.write(row, i + 4 + len(keywordsgroup_counts), count) #写入关联词计数
-
+                            for i, keywords in enumerate(keywordsgroup_item):
+                                worksheet.write(row, i + 4 + len(keywordsgroup_counts) + len(related_words_counts), ','.join(keywords)) #写入关联词计数
                             row += 1
 
                             # 更新进度
