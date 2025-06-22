@@ -13,7 +13,7 @@
 '''
 import os
 import re
-import xlwt
+import openpyxl  # 引入 openpyxl 库
 import jieba
 # import difflib
 import openpyxl
@@ -222,22 +222,21 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
     处理指定文件夹及其子文件夹中的所有txt文件，提取关键词并统计词频和总字数，将结果存储到Excel表格中。
     """
     try:
-        # 创建Excel工作簿
-        workbook = xlwt.Workbook(encoding="utf-8")
-        worksheet = workbook.add_sheet("alice")
-        row = 0
+        # 创建Excel工作簿和工作表，使用 openpyxl
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = "alice"
+        row = 1  # openpyxl 行索引从 1 开始
         # 添加Excel表头
-        worksheet.write(row, 0, '股票代码')
-        worksheet.write(row, 1, '公司简称')
-        worksheet.write(row, 2, '年份')
-        worksheet.write(row, 3, '总字数')  # 添加总字数列
-
+        headers = ['股票代码', '公司简称', '年份', '总字数']
         for i, keyword in enumerate(keywordsGroup):
-            worksheet.write(row, i + 4, f'关键词类别-{i}的次数')  # 按类型进行计数统计
+            headers.append(f'关键词类别-{i}的次数')
         for i, step in enumerate(steps):
-            worksheet.write(row, i + 4 + len(keywordsGroup), f'关联词step为{step}的次数') #写入关联词计数
+            headers.append(f'关联词step为{step}的次数')
         for i, keywords in enumerate(keywordsGroup):
-            worksheet.write(row, i + 4 + len(keywordsGroup) + len(steps), f'匹配的管理词-{i}')
+            headers.append(f'匹配的管理词-{i}')
+        for col_num, header in enumerate(headers, 1):
+            worksheet.cell(row=row, column=col_num, value=header)
         row += 1
 
         total_files = count_txt_files(folder_path, start_year, end_year)
@@ -268,22 +267,19 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             related_words_counts, keywordsgroup_counts, total_words, keywordsgroup_item = extract_keywords(keywordsGroup, root, filename)
 
                             # 将结果写入Excel表格
-                            worksheet.write(row, 0, stock_code)
-                            worksheet.write(row, 1, company_name)
-                            worksheet.write(row, 2, year)
-                            worksheet.write(row, 3, total_words)  # 写入总字数
-                            for i, count in enumerate(keywordsgroup_counts):
-                                worksheet.write(row, i + 4, count)  # 调整关键词列的索引
-                            for i, count in enumerate(related_words_counts):
-                                worksheet.write(row, i + 4 + len(keywordsgroup_counts), count) #写入关联词计数
-                            for i, keywords in enumerate(keywordsgroup_item):
-                                worksheet.write(row, i + 4 + len(keywordsgroup_counts) + len(related_words_counts), ','.join(keywords)) #写入关联词计数
+                            data = [stock_code, company_name, year, total_words]
+                            data.extend(keywordsgroup_counts)
+                            data.extend(related_words_counts)
+                            for keywords in keywordsgroup_item:
+                                data.append(','.join(keywords))
+                            for col_num, value in enumerate(data, 1):
+                                worksheet.cell(row=row, column=col_num, value=value)
                             row += 1
 
                             # 更新进度
                             processed_files += 1
                             progress = (processed_files / total_files) * 100
-                            print(f"\r当前进度: {progress:.2f}%", end='', flush=True)
+                            print(f"\r处理完成{filename}, 当前进度: {progress:.2f}%", end='', flush=True)
 
                             # 每处理指定数目个数据就保存一次Excel文件
                             if processed_files % size == 0:
@@ -340,7 +336,7 @@ if __name__ == '__main__':
             "太阳能发电", "太阳能", "堆肥", "煤油"
         ],
         [
-            "风险", "经营风险", "市场风险", "信用风险", "不确定性", "不确定",
+            "风险", "经营风险", "市场风险", "信用风险", "不确定", "不确定",
             "波动", "变化", "改变", "徘徊", "不稳", "不稳定性", "不稳定",
             "不寻常", "错综复杂", "非常复杂", "纷繁复杂", "纷纭复杂", "十分复杂",
             "结构复杂", "变得复杂", "风云变幻", "风云突变", "矛盾突出", "突变",
