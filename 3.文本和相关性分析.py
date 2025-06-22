@@ -22,8 +22,8 @@ import re
 
 
 # 输入年份区间
-start_year = "2013"
-end_year = "2013"
+start_year = "2024"
+end_year = "2024"
 # 相关性计算，多少个词内
 steps = [5, 10, 15]
 # 文件存储路径
@@ -279,7 +279,7 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             # 更新进度
                             processed_files += 1
                             progress = (processed_files / total_files) * 100
-                            print(f"\r处理完成{filename}, 当前进度: {progress:.2f}%", end='', flush=True)
+                            print(f"\r处理完成{filename}, 已处理{processed_files}个文件，总共{total_files}个文件，进度: {progress:.2f}%", end='', flush=True)
 
                             # 每处理指定数目个数据就保存一次Excel文件
                             if processed_files % size == 0:
