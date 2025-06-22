@@ -51,11 +51,14 @@ def convert(code, name, year, pdf_url, pdf_dir, txt_dir, flag_pdf):
                 return
 
         # 转换PDF文件为TXT文件
-        with pdfplumber.open(pdf_file_path) as pdf:
-            with open(txt_file_path, 'w', encoding='utf-8') as f:
-                for page in pdf.pages:
-                    text = page.extract_text()
-                    f.write(text)
+        try:
+            with pdfplumber.open(pdf_file_path) as pdf:
+                with open(txt_file_path, 'w', encoding='utf-8') as f:
+                    for page in pdf.pages:
+                        text = page.extract_text()
+                        f.write(text)
+        except Exception as e:
+            logging.error(f"写入文件 {code:06}_{name}_{year}时出错： {e}")
 
         logging.info(f"{txt_file_path} 已保存.")
 
@@ -119,7 +122,7 @@ if __name__ == '__main__':
     else:
         #处理单独年份：
         #特定年份的excel表格，请务必修改。
-        year = 2024
+        year = 2009
         file_name = f"{work_path}年报链接_{year}Alice.xlsx"
         pdf_dir = f'reports/{year}/pdf'
         txt_dir = f'reports/{year}/txt'
