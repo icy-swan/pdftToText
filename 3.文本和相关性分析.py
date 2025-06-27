@@ -13,7 +13,6 @@
 '''
 import os
 import re
-import openpyxl  # 引入 openpyxl 库
 import jieba
 # import difflib
 import openpyxl
@@ -22,8 +21,8 @@ import re
 
 
 # 输入年份区间
-start_year = "2024"
-end_year = "2024"
+start_year = "2009"
+end_year = "2009"
 # 相关性计算，多少个词内
 steps = [5, 10, 15]
 # 文件存储路径
@@ -263,6 +262,11 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             stock_code = match.group(1)
                             company_name = match.group(2)
 
+                            # 更新进度
+                            progress = (processed_files / total_files) * 100
+                            print(f"\r进度: {progress:.2f}%，正在处理{filename}, 已处理{processed_files}个文件，总共{total_files}个文件", end='', flush=True)
+                            processed_files += 1
+
                             # 提取关键词并统计词频和总字数
                             related_words_counts, keywordsgroup_counts, total_words, keywordsgroup_item = extract_keywords(keywordsGroup, root, filename)
 
@@ -275,11 +279,6 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
                             for col_num, value in enumerate(data, 1):
                                 worksheet.cell(row=row, column=col_num, value=value)
                             row += 1
-
-                            # 更新进度
-                            processed_files += 1
-                            progress = (processed_files / total_files) * 100
-                            print(f"\r处理完成{filename}, 已处理{processed_files}个文件，总共{total_files}个文件，进度: {progress:.2f}%", end='', flush=True)
 
                             # 每处理指定数目个数据就保存一次Excel文件
                             if processed_files % size == 0:
@@ -362,7 +361,4 @@ if __name__ == '__main__':
     except Exception as e:
         print("文件处理失败！！")
         print(str(e))
-
-    #！！！注意：如果程序运行无反应，多半是路径和txt文件命名问题！
-    # 推荐文件名命名格式：“600519_贵州茅台_2019.txt”
 

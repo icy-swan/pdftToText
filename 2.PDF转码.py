@@ -12,11 +12,45 @@ import multiprocessing
 import pdfplumber
 import logging
 import re
+from pdfminer.high_level import extract_text
 
 #日志配置文件
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 work_path = "/Users/bl/git/pdftToText/"
+
+# 识别编码
+def detect_encoding_by_fonts(pdf_path):
+    with pdfplumber.open(pdf_path) as pdf:
+        # 收集文档中所有使用的字体
+        all_fonts = set()
+        for page in pdf.pages:
+            for char in page.chars:
+                if "fontname" in char:
+                    fontname = char["fontname"].lower()
+                    all_fonts.add(fontname)
+        
+        # 分析字体名称判断编码
+        encoding_map = {
+            "gb": "gbk",          # 简体中文
+            "gbk": "gbk",
+            "gb2312": "gb2312",
+            "big5": "big5",        # 繁体中文
+            "msung": "big5",       # 繁体中文常见字体
+            "gothic": "shift-jis", # 日文
+            "mincho": "shift-jis",
+            "batang": "euc-kr",    # 韩文
+            "dotum": "euc-kr",
+            "cyrillic": "cp1251",  # 俄文
+            "1251": "cp1251"
+        }
+        
+        for font in all_fonts:
+            for key, encoding in encoding_map.items():
+                if key in font:
+                    return encoding
+        
+        return "utf-8"  # 无法确定
 
 #下载模块
 def download_pdf(pdf_url, pdf_file_path):
@@ -52,11 +86,10 @@ def convert(code, name, year, pdf_url, pdf_dir, txt_dir, flag_pdf):
 
         # 转换PDF文件为TXT文件
         try:
-            with pdfplumber.open(pdf_file_path) as pdf:
-                with open(txt_file_path, 'w', encoding='utf-8') as f:
-                    for page in pdf.pages:
-                        text = page.extract_text()
-                        f.write(text)
+            encoding = detect_encoding_by_fonts(pdf_file_path)
+            text = extract_text(pdf_file_path, codec=encoding)
+            with open(txt_file_path, 'w', encoding='utf-8') as f:
+                f.write(text)
         except Exception as e:
             logging.error(f"写入文件 {code:06}_{name}_{year}时出错： {e}")
 
