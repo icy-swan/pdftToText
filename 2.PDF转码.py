@@ -155,7 +155,7 @@ if __name__ == '__main__':
     else:
         #处理单独年份：
         #特定年份的excel表格，请务必修改。
-        year = 2009
+        year = 2012
         file_name = f"{work_path}年报链接_{year}Alice.xlsx"
         pdf_dir = f'reports/{year}/pdf'
         txt_dir = f'reports/{year}/txt'

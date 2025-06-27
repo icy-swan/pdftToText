@@ -264,7 +264,10 @@ def process_files(folder_path, keywordsGroup, start_year=None, end_year=None):
 
                             # 更新进度
                             progress = (processed_files / total_files) * 100
-                            print(f"\r进度: {progress:.2f}%，正在处理{filename}, 已处理{processed_files}个文件，总共{total_files}个文件", end='', flush=True)
+                            if progress == 0:
+                                print(f"开始处理{filename}")
+                            else:
+                                print(f"\r进度: {progress:.2f}%，正在处理{filename}, 已处理{processed_files}个文件，总共{total_files}个文件", end='', flush=True)
                             processed_files += 1
 
                             # 提取关键词并统计词频和总字数
